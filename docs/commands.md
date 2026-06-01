@@ -51,3 +51,8 @@ git log --oneline
 # Första pushen av en ny branch
 
 git push -u origin branch-namn
+
+
+# "Logga" in på Env
+
+.venv\Scripts\Activate.ps1
