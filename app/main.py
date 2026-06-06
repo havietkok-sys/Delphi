@@ -1,6 +1,9 @@
 from fastapi import FastAPI
-from .data import set_dataset
-from fastapi import UploadFile
+from .data import set_dataset, get_dataset
+from fastapi import UploadFile, HTTPException
+import pandas as pd
+from .schemas import AskRequest, AskResponse
+from .llm import ask_model
 
 app = FastAPI()
 
@@ -9,7 +12,48 @@ app = FastAPI()
 def Health():
     return {"status": "ok"}
 
-
 @app.post("/data/upload")
 async def upload_data(uploaded_file: UploadFile):
-    return {"filename": uploaded_file.filename}
+    if not uploaded_file.filename.endswith(".csv"):
+
+        raise HTTPException(
+            status_code=400,
+            detail="only csv files allowed"
+        )
+    
+    df = pd.read_csv(uploaded_file.file)
+
+    set_dataset(df)
+
+    return {
+        "rows": len(df),
+        "columns": list(df.columns),
+        "dtypes": {
+            column: str(dtype)
+            for column, dtype in df.dtypes.items()
+        }
+    }
+
+@app.get("/data/stats")
+def get_stats():
+
+    df = get_dataset()
+
+    if df is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No dataset loaded"
+        )
+
+    return df.describe().to_dict()
+
+@app.post("/ai/ask")
+def ask_ai(request: AskRequest):
+
+    answer = ask_model(request.question)
+
+    return AskResponse(
+        question=request.question,
+        answer=answer,
+        model="SmolLM2-135M-Instruct"
+    )
