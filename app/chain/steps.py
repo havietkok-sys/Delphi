@@ -6,7 +6,7 @@ from ..schemas import AskResponse
 
 class PromptInput(BaseModel):
     question: str
-
+    stats: dict
 
 class PromptOutput(BaseModel):
     question: str
@@ -20,17 +20,22 @@ class LLMOutput(BaseModel):
 
 class PromptBuilder(Runnable[PromptInput, PromptOutput]):
     name: str = "prompt_builder"
+    
 
     def invoke(self, data: PromptInput) -> PromptOutput:
 
         prompt = f"""
-You are a helpful assistant.
+        You are a data analyst.
 
-Question:
-{data.question}
+        Dataset statistics:
 
-Answer:
-"""
+        {data.stats}
+
+        Question:
+        {data.question}
+
+        Answer:
+        """
         return PromptOutput(question=data.question, prompt=prompt)
 
 

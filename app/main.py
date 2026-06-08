@@ -46,8 +46,22 @@ def get_stats():
 @app.post("/ai/ask")
 def ask_ai(request: AskRequest):
 
+    df = get_dataset()
+
+    if df is None:
+        raise HTTPException(
+            status_code=400,
+            detail="No dataset loaded"
+        )
+
+    stats = df.describe().to_dict()
+
     return pipeline.invoke(
         PromptInput(
-            question=request.question
+            question=request.question,
+            stats=stats
         )
     )
+
+
+
